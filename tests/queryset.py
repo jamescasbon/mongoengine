@@ -1136,5 +1136,34 @@ class QTest(unittest.TestCase):
             self.assertEqual(q._item_query_as_js(item, test_scope, 0), js)
             self.assertEqual(scope, test_scope)
 
+
+class QuerySetRoutingTest(unittest.TestCase):
+
+    def setUp(self):
+        connect(db='mongoenginetest', db_map={'item': 'mongoenginetest2'})
+
+        class Person(Document):
+            name = StringField()
+            age = IntField()
+        class Item(Document):
+            name = StringField()
+            owner = ReferenceField(Person)
+        self.Person = Person
+        self.Item = Item
+
+    def test_finding_from_two_databases(self):
+        """Ensure that the db_map routes documents to the correct the database.
+        """
+        person = self.Person(name='Test')
+        person.save()
+        self.Item(name='Test', owner=person).save()
+        assert self.Person.objects.count() == 1
+        assert self.Item.objects.count() == 1
+
+    def tearDown(self):
+        self.Person.drop_collection()
+        self.Item.drop_collection()
+
+
 if __name__ == '__main__':
     unittest.main()

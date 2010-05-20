@@ -796,7 +796,7 @@ class QuerySet(object):
         scope['query'] = query
         code = pymongo.code.Code(code, scope=scope)
 
-        db = _get_db()
+        db = _get_db(collection)
         return db.eval(code, *fields)
 
     def sum(self, field):
@@ -894,9 +894,9 @@ class QuerySetManager(object):
             return self
 
         if self._collection is None:
-            db = _get_db()
             collection = owner._meta['collection']
-
+            db = _get_db(collection)
+            
             # Create collection as a capped collection if specified
             if owner._meta['max_size'] or owner._meta['max_documents']:
                 # Get max document limit and max byte size from meta

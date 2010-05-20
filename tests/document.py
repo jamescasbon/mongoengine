@@ -556,5 +556,56 @@ class DocumentTest(unittest.TestCase):
         self.Person.drop_collection()
 
 
+class DocumentRoutingTest(unittest.TestCase):
+
+    def setUp(self):
+        connect(db='mongoenginetest', db_map={'item': 'mongoenginetest2'})
+        self.db1 = _get_db()
+        self.db2 = _get_db('item')
+
+        class Person(Document):
+            name = StringField()
+            age = IntField()
+        class Item(Document):
+            name = StringField()
+            owner = ReferenceField(Person)
+        self.Person = Person
+        self.Item = Item
+
+    def test_saving_to_two_databases(self):
+        """Ensure that the db_map routes documents to the correct the database.
+        """
+        person = self.Person(name='Test')
+        person.save()
+        self.Item(name='Test', owner=person).save()
+        
+        # check that collections are in the right databases
+        person_collection = self.Person._meta['collection']
+        self.assertTrue(person_collection in self.db1.collection_names())
+
+        item_collection = self.Item._meta['collection']
+        self.assertTrue(item_collection in self.db2.collection_names())
+        
+        # check for the objects
+        collection = self.db1[person_collection]
+        person_obj = collection.find_one({'name': 'Test'})
+        self.assertEqual(person_obj['name'], 'Test')
+
+        collection = self.db2[item_collection]
+        item_obj = collection.find_one({'name': 'Test'})
+        self.assertEqual(item_obj['name'], 'Test')
+        
+        # drop collections
+        self.Person.drop_collection()
+        self.assertFalse(person_collection in self.db1.collection_names())
+        
+        self.Item.drop_collection()
+        self.assertFalse(item_collection in self.db2.collection_names())
+        
+    def tearDown(self):
+        self.Person.drop_collection()
+        self.Item.drop_collection()
+
+
 if __name__ == '__main__':
     unittest.main()

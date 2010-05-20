@@ -113,7 +113,7 @@ class Document(BaseDocument):
         """Drops the entire collection associated with this
         :class:`~mongoengine.Document` type from the database.
         """
-        db = _get_db()
+        db = _get_db(cls._meta['collection'])
         db.drop_collection(cls._meta['collection'])
 
 
