@@ -1159,6 +1159,10 @@ class QuerySetRoutingTest(unittest.TestCase):
         self.Item(name='Test', owner=person).save()
         assert self.Person.objects.count() == 1
         assert self.Item.objects.count() == 1
+        
+        owner = self.Item.objects()[0].owner
+        self.assertEqual(owner['name'], 'Test')
+        self.assertEqual(isinstance(owner, self.Person), True)
 
     def tearDown(self):
         self.Person.drop_collection()
