@@ -62,7 +62,7 @@ def connect(db, db_map=None, username=None, password=None, **kwargs):
     will be routed to the database specified.  
     
     e.g. 
-    >>> connect('default', db_map={othercollection='otherdb'})
+    >>> connect('default', db_map={'othercollection': 'otherdb'})
     """
     global _connection_settings, _db_name, _db_username, _db_password
     _connection_settings.update(kwargs)
